@@ -27,7 +27,7 @@ public class ProductSearchService : IProductSearchService
         var must = new List<object>();
         var filter = new List<object>();
 
-        // queryParam
+        // queryParam search by name
         if (!string.IsNullOrWhiteSpace(request.QueryParam))
         {
             must.Add(new
@@ -46,7 +46,7 @@ public class ProductSearchService : IProductSearchService
             });
         }
 
-        // get by category
+        // get by category filtering
         if (!string.IsNullOrWhiteSpace(request.Category))
         {
             filter.Add(new
@@ -58,7 +58,7 @@ public class ProductSearchService : IProductSearchService
             });
         }
 
-        // get by range price
+        // get by range price filtering
         if (request.MinPrice.HasValue || request.MaxPrice.HasValue)
         {
             filter.Add(new
@@ -74,7 +74,7 @@ public class ProductSearchService : IProductSearchService
             });
         }
 
-        // helper to lower sortBy
+        // helper to lower sortBy 
         object[] sort = request.SortPrice?.ToLower() switch
         {
             "asc" => new object[] { new { price = new { order = "asc" } } },
@@ -82,10 +82,12 @@ public class ProductSearchService : IProductSearchService
             _ => new object[] { new { _score = new { order = "desc" } } }
         };
 
+        // jika tidak ada must clause, tambahkan match_all agar query tetap valid
         object mustClause = must.Count == 0
             ? new object[] { new { match_all = new { } } }
             : must;
 
+        // membangun query body untuk Elasticsearch
         var queryBody = new
         {
             from,
@@ -101,8 +103,10 @@ public class ProductSearchService : IProductSearchService
             }
         };
 
+        // untuk debugging, bisa log queryBody sebelum diserialisasi
         var json = JsonSerializer.Serialize(queryBody);
 
+        // mengirim request ke Elasticsearch
         var response = await _httpClient.PostAsync(
             $"/{_options.IndexName}/_search",
             new StringContent(json, Encoding.UTF8, "application/json"),
@@ -118,6 +122,7 @@ public class ProductSearchService : IProductSearchService
         long total = 0;
         var items = new List<ProductSearchItemDto>();
 
+        // parsing response dari Elasticsearch
         if (root.TryGetProperty("hits", out var hitsElement))
         {
             if (hitsElement.TryGetProperty("total", out var totalElement))
@@ -133,6 +138,7 @@ public class ProductSearchService : IProductSearchService
                 }
             }
 
+            // parsing setiap hit untuk membangun list ProductSearchItemDto
             if (hitsElement.TryGetProperty("hits", out var hitArray) &&
                 hitArray.ValueKind == JsonValueKind.Array)
             {
@@ -190,6 +196,7 @@ public class ProductSearchService : IProductSearchService
             }
         }
 
+        // hasil PagedResult
         return new PagedResult<ProductSearchItemDto>
         {
             Page = page,
