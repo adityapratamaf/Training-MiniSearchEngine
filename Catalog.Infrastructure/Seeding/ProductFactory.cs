@@ -7,23 +7,35 @@ public static class ProductFactory
     private static readonly string[] Categories =
     [
         "Electronics",
-        "Laptop",
-        "Phone",
         "Fashion",
         "Home",
-        "Sports"
+        "Sports",
+        "Stationery",
+        "Household",
+        "Toys",
+        "Automotive",
+        "Books",
+        "Health",
+        "Beauty",
+        "Grocery",
+        "Garden",
+        "Music",
+        "Office",
+        "Food",
+        "Drink"
+
     ];
 
     private static readonly string[] Adjectives =
     [
-        "Premium", "Smart", "Portable", "Gaming", "Modern",
-        "Elegant", "Compact", "Pro", "Lite", "Ultra"
+        "Premium", "Smart", "Portable", "Gaming", "Modern", "Wireless", "Waterproof", "High-Quality", "Eco-Friendly", "Multi-functional",
+        "Elegant", "Compact", "Pro", "Lite", "Ultra", "Classic", "Advanced", "Durable", "Stylish"
     ];
 
     private static readonly string[] ProductNames =
     [
-        "Headphone", "Laptop", "Mouse", "Keyboard", "Monitor",
-        "Phone", "Shoes", "Chair", "Table", "Watch"
+        "Headphone", "Laptop", "Mouse", "Keyboard", "Monitor", "Tablet", "Cholate", "Perfume", "Syrup", "Juice", "Camera", "Cup", "Bottle", "Bag", 
+        "Phone", "Shoes", "Chair", "Table", "Watch", "Backpack", "Camera", "Sunglasses", "Jacket", "Book", "Bicycle", "Blender", "Coffee Maker", "Vacuum Cleaner", "Smart TV"
     ];
 
     public static Product Create(Random random)
