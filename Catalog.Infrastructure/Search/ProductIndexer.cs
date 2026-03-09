@@ -21,7 +21,7 @@ public class ProductIndexer : IProductIndexer
     }
 
     /// <summary>
-    /// mengirim semua data product dari PostgreSQL ke Elasticsearch
+    /// mengirim semua data product dari db postgre ke elasticsearch
     /// </summary>
     public async Task ReindexAllAsync(CancellationToken cancellationToken = default)
     {
