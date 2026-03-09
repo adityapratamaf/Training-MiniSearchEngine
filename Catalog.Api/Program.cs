@@ -3,12 +3,22 @@ using Catalog.Application.Interfaces;
 using Catalog.Infrastructure.DependencyInjection;
 using Catalog.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+// swagger
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "ECommerce.Api",
+        Version = "v1"
+    });
+});
 
 builder.Services.AddInfrastructure(builder.Configuration);
 
