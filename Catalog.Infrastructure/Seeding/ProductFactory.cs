@@ -6,7 +6,7 @@ public static class ProductFactory
 {
     private static readonly string[] Categories =
     [
-        "Electronics",
+        "Electronic",
         "Fashion",
         "Home",
         "Sports",
@@ -22,8 +22,13 @@ public static class ProductFactory
         "Music",
         "Office",
         "Food",
-        "Drink"
-
+        "Drink",
+        "Pet Supplies",
+        "Baby",
+        "Industrial",
+        "Art",
+        "Crafts",
+        "Jewelry"
     ];
 
     private static readonly string[] Adjectives =
