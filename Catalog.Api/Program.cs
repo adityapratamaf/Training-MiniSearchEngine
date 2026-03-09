@@ -36,6 +36,10 @@ app.UseSwaggerUI();
 
 app.MapControllers();
 
+// <summary>
+// untuk memastikan bahwa database sudah dibuat dan migrasi sudah diterapkan,
+// lalu melakukan seeding data awal ke database, dan akhirnya melakukan reindex semua produk ke Elasticsearch.
+// </summary>
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;

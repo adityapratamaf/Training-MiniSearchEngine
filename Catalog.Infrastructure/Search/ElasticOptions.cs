@@ -1,3 +1,6 @@
+/// <summary>
+/// untuk menyimpan konfigurasi Elasticsearch seperti URL dasar dan nama indeks.
+/// </summary>
 namespace Catalog.Infrastructure.Search;
 
 public class ElasticOptions

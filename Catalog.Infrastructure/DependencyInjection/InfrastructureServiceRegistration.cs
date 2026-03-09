@@ -11,6 +11,9 @@ namespace Catalog.Infrastructure.DependencyInjection;
 
 public static class InfrastructureServiceRegistration
 {
+    // <summary>
+    // untuk menambahkan service ke dalam container dependency injection
+    // </summary>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<AppDbContext>(options =>

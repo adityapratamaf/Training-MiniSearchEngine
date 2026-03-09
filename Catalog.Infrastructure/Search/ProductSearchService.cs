@@ -18,6 +18,10 @@ public class ProductSearchService : IProductSearchService
         _options = options.Value;
     }
 
+    // <summary>
+    // Metode untuk melakukan pencarian produk berdasarkan kriteria yang diberikan dalam ProductSearchRequest
+    // Ini akan membangun query pencarian yang sesuai untuk Elasticsearch, mengirimkannya, dan kemudian memetakan hasilnya ke DTO yang akan dikembalikan ke klien.
+    // </summary>
     public async Task<PagedResult<ProductSearchItemDto>> SearchAsync(ProductSearchRequest request, CancellationToken cancellationToken = default)
     {
         var page = request.Page <= 0 ? 1 : request.Page;
