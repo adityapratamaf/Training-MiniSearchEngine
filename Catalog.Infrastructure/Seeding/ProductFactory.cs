@@ -1,0 +1,47 @@
+using Catalog.Domain.Entities;
+
+namespace Catalog.Infrastructure.Seeding;
+
+public static class ProductFactory
+{
+    private static readonly string[] Categories =
+    [
+        "Electronics",
+        "Laptop",
+        "Phone",
+        "Fashion",
+        "Home",
+        "Sports"
+    ];
+
+    private static readonly string[] Adjectives =
+    [
+        "Premium", "Smart", "Portable", "Gaming", "Modern",
+        "Elegant", "Compact", "Pro", "Lite", "Ultra"
+    ];
+
+    private static readonly string[] ProductNames =
+    [
+        "Headphone", "Laptop", "Mouse", "Keyboard", "Monitor",
+        "Phone", "Shoes", "Chair", "Table", "Watch"
+    ];
+
+    public static Product Create(Random random)
+    {
+        var category = Categories[random.Next(Categories.Length)];
+        var adjective = Adjectives[random.Next(Adjectives.Length)];
+        var name = ProductNames[random.Next(ProductNames.Length)];
+
+        var price = Math.Round((decimal)(random.NextDouble() * 9_500_000 + 500_000), 2);
+
+        return new Product
+        {
+            Id = Guid.NewGuid(),
+            Name = $"{adjective} {name}",
+            Category = category,
+            Price = price,
+            Description = $"This is a {adjective.ToLower()} {name.ToLower()} for {category.ToLower()} category.",
+            CreatedAtUtc = DateTime.UtcNow.AddDays(-random.Next(0, 365))
+        };
+    }
+}
