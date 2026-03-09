@@ -1,3 +1,4 @@
+using Catalog.Api.Endpoints;
 using Catalog.Application.Interfaces;
 using Catalog.Infrastructure.DependencyInjection;
 using Catalog.Infrastructure.Persistence;
@@ -11,7 +12,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// CORS
+// cors
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -21,8 +22,7 @@ builder.Services.AddCors(options =>
                 "http://127.0.0.1:5500",
                 "http://localhost:5500",
                 "http://127.0.0.1:5501",
-                "http://localhost:5501",
-                "null"
+                "http://localhost:5501"
             )
             .AllowAnyHeader()
             .AllowAnyMethod();
@@ -35,10 +35,11 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.MapControllers();
+app.MapProductEndpoints();
 
 // <summary>
 // untuk memastikan bahwa database sudah dibuat dan migrasi sudah diterapkan,
-// lalu melakukan seeding data awal ke database, dan akhirnya melakukan reindex semua produk ke Elasticsearch.
+// lalu melakukan seeding data awal ke database, dan akhirnya melakukan reindex semua produk ke elasticsearch.
 // </summary>
 using (var scope = app.Services.CreateScope())
 {

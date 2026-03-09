@@ -20,9 +20,9 @@ public class ProductIndexer : IProductIndexer
         _options = options.Value;
     }
 
-    // <summary>
-    // reindex semua produk ke Elasticsearch. Ini akan memastikan bahwa indeks sudah ada, lalu mengambil semua produk dari database dan mengirimkannya ke Elasticsearch dalam format bulk.
-    // </summary>
+    /// <summary>
+    /// mengirim semua data product dari PostgreSQL ke Elasticsearch
+    /// </summary>
     public async Task ReindexAllAsync(CancellationToken cancellationToken = default)
     {
         await EnsureIndexAsync(cancellationToken);
@@ -64,7 +64,7 @@ public class ProductIndexer : IProductIndexer
     }
 
     // <summary>
-    // memastikan bahwa indeks untuk produk sudah ada di Elasticsearch. Jika belum, maka akan dibuat dengan mapping yang sesuai.
+    // set indeks untuk produk sudah ada di elasticsearch
     // </summary>
     private async Task EnsureIndexAsync(CancellationToken cancellationToken)
     {

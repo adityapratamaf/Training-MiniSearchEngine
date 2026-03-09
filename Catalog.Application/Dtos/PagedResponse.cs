@@ -1,6 +1,6 @@
 namespace Catalog.Application.Dtos;
 
-public class PagedResult<T>
+public class PagedResponse<T>
 {
     public int Page { get; set; }
     public int PageSize { get; set; }

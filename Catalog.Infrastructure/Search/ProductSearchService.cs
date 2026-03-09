@@ -18,11 +18,10 @@ public class ProductSearchService : IProductSearchService
         _options = options.Value;
     }
 
-    // <summary>
-    // Metode untuk melakukan pencarian produk berdasarkan kriteria yang diberikan dalam ProductSearchRequest
-    // Ini akan membangun query pencarian yang sesuai untuk Elasticsearch, mengirimkannya, dan kemudian memetakan hasilnya ke DTO yang akan dikembalikan ke klien.
-    // </summary>
-    public async Task<PagedResult<ProductSearchItemDto>> SearchAsync(ProductSearchRequest request, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// service untuk melakukan pencarian product menggunakan elasticsearch
+    /// </summary>
+    public async Task<PagedResponse<ProductResponse>> SearchAsync(ProductSearchRequest request, CancellationToken cancellationToken = default)
     {
         var page = request.Page <= 0 ? 1 : request.Page;
         var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
@@ -30,22 +29,43 @@ public class ProductSearchService : IProductSearchService
 
         var must = new List<object>();
         var filter = new List<object>();
+        var should = new List<object>();
 
         // queryParam search by name
         if (!string.IsNullOrWhiteSpace(request.QueryParam))
         {
-            must.Add(new
+            // autocomplete / prefix search
+            should.Add(new
             {
                 multi_match = new
                 {
                     query = request.QueryParam,
                     type = "bool_prefix",
-                    fields = new[] 
-                    { 
-                        "name", 
-                        "name._2gram", 
-                        "name._3gram" 
+                    fields = new[]
+                    {
+                        "name",
+                        "name._2gram",
+                        "name._3gram"
                     },
+                    boost = 2
+                }
+            });
+
+            // fuzzy search untuk typo tolerance
+            should.Add(new
+            {
+                multi_match = new
+                {
+                    query = request.QueryParam,
+                    fields = new[]
+                    {
+                        "name^3",
+                        "description",
+                        "category"
+                    },
+                    fuzziness = "AUTO",
+                    prefix_length = 1,
+                    @operator = "and"
                 }
             });
         }
@@ -78,7 +98,7 @@ public class ProductSearchService : IProductSearchService
             });
         }
 
-        // helper to lower sortBy 
+        // helper to lower sortBy
         object[] sort = request.SortPrice?.ToLower() switch
         {
             "asc" => new object[] { new { price = new { order = "asc" } } },
@@ -86,31 +106,38 @@ public class ProductSearchService : IProductSearchService
             _ => new object[] { new { _score = new { order = "desc" } } }
         };
 
-        // jika tidak ada must clause, tambahkan match_all agar query tetap valid
-        object mustClause = must.Count == 0
-            ? new object[] { new { match_all = new { } } }
-            : must;
+        // jika tidak ada query search, pakai match_all
+        object queryClause = should.Count == 0
+            ? new
+            {
+                @bool = new
+                {
+                    must = new object[] { new { match_all = new { } } },
+                    filter
+                }
+            }
+            : new
+            {
+                @bool = new
+                {
+                    should,
+                    minimum_should_match = 1,
+                    filter
+                }
+            };
 
-        // membangun query body untuk Elasticsearch
+        // membangun query body untuk elasticsearch
         var queryBody = new
         {
             from,
             size = pageSize,
             sort,
-            query = new
-            {
-                @bool = new
-                {
-                    must = mustClause,
-                    filter
-                }
-            }
+            query = queryClause
         };
 
-        // untuk debugging, bisa log queryBody sebelum diserialisasi
         var json = JsonSerializer.Serialize(queryBody);
 
-        // mengirim request ke Elasticsearch
+        // mengirim request ke elasticsearch
         var response = await _httpClient.PostAsync(
             $"/{_options.IndexName}/_search",
             new StringContent(json, Encoding.UTF8, "application/json"),
@@ -124,9 +151,9 @@ public class ProductSearchService : IProductSearchService
         var root = document.RootElement;
 
         long total = 0;
-        var items = new List<ProductSearchItemDto>();
+        var items = new List<ProductResponse>();
 
-        // parsing response dari Elasticsearch
+        // parsing response dari elasticsearch
         if (root.TryGetProperty("hits", out var hitsElement))
         {
             if (hitsElement.TryGetProperty("total", out var totalElement))
@@ -142,7 +169,6 @@ public class ProductSearchService : IProductSearchService
                 }
             }
 
-            // parsing setiap hit untuk membangun list ProductSearchItemDto
             if (hitsElement.TryGetProperty("hits", out var hitArray) &&
                 hitArray.ValueKind == JsonValueKind.Array)
             {
@@ -157,12 +183,10 @@ public class ProductSearchService : IProductSearchService
                     decimal price = 0;
                     string description = string.Empty;
 
-                    if (source.TryGetProperty("id", out var idProp))
+                    if (source.TryGetProperty("id", out var idProp) &&
+                        idProp.ValueKind == JsonValueKind.String)
                     {
-                        if (idProp.ValueKind == JsonValueKind.String)
-                        {
-                            Guid.TryParse(idProp.GetString(), out id);
-                        }
+                        Guid.TryParse(idProp.GetString(), out id);
                     }
 
                     if (source.TryGetProperty("name", out var nameProp))
@@ -175,12 +199,10 @@ public class ProductSearchService : IProductSearchService
                         category = categoryProp.GetString() ?? string.Empty;
                     }
 
-                    if (source.TryGetProperty("price", out var priceProp))
+                    if (source.TryGetProperty("price", out var priceProp) &&
+                        priceProp.ValueKind == JsonValueKind.Number)
                     {
-                        if (priceProp.ValueKind == JsonValueKind.Number)
-                        {
-                            price = priceProp.GetDecimal();
-                        }
+                        price = priceProp.GetDecimal();
                     }
 
                     if (source.TryGetProperty("description", out var descriptionProp))
@@ -188,7 +210,7 @@ public class ProductSearchService : IProductSearchService
                         description = descriptionProp.GetString() ?? string.Empty;
                     }
 
-                    items.Add(new ProductSearchItemDto
+                    items.Add(new ProductResponse
                     {
                         Id = id,
                         Name = name,
@@ -200,8 +222,7 @@ public class ProductSearchService : IProductSearchService
             }
         }
 
-        // hasil PagedResult
-        return new PagedResult<ProductSearchItemDto>
+        return new PagedResponse<ProductResponse>
         {
             Page = page,
             PageSize = pageSize,

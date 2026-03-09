@@ -1,43 +1,37 @@
 using Catalog.Application.Contracts;
 using Catalog.Application.Interfaces;
-using Microsoft.AspNetCore.Mvc;
 
-namespace Catalog.Api.Controllers;
+namespace Catalog.Api.Endpoints;
 
-[ApiController]
-[Route("api/products")]
-public class ProductsController : ControllerBase
+public static class ProductEndpoints
 {
-    private readonly IProductSearchService _productSearchService;
-
-    public ProductsController(IProductSearchService productSearchService)
+    public static void MapProductEndpoints(this WebApplication app)
     {
-        _productSearchService = productSearchService;
-    }
+        var productGroup = app.MapGroup("/api/products").WithTags("Products");
 
-    [HttpGet("search")]
-    public async Task<IActionResult> Search(
-        [FromQuery] string? queryParam,
-        [FromQuery] string? category,
-        [FromQuery] decimal? minPrice,
-        [FromQuery] decimal? maxPrice,
-        [FromQuery] string? sortPrice,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 10,
-        CancellationToken cancellationToken = default)
-    {
-        var request = new ProductSearchRequest
+        productGroup.MapGet("/search", async (IProductSearchService productSearchService,
+            string? queryParam,
+            string? category,
+            decimal? minPrice,
+            decimal? maxPrice,
+            string? sortPrice,
+            int page = 1,
+            int pageSize = 10,
+            CancellationToken cancellationToken = default) =>
         {
-            QueryParam = queryParam,
-            Category = category,
-            MinPrice = minPrice,
-            MaxPrice = maxPrice,
-            SortPrice = sortPrice,
-            Page = page,
-            PageSize = pageSize
-        };
+            var request = new ProductSearchRequest
+            {
+                QueryParam = queryParam,
+                Category = category,
+                MinPrice = minPrice,
+                MaxPrice = maxPrice,
+                SortPrice = sortPrice,
+                Page = page,
+                PageSize = pageSize
+            };
 
-        var result = await _productSearchService.SearchAsync(request, cancellationToken);
-        return Ok(result);
+            var result = await productSearchService.SearchAsync(request, cancellationToken);
+            return Results.Ok(result);
+        });
     }
 }
