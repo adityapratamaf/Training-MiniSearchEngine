@@ -5,6 +5,11 @@ namespace Catalog.Infrastructure.Search;
 /// </summary>
 public class ElasticOptions
 {
-    public string BaseUrl { get; set; } = "https://elastic.minimdev.com";
-    public string IndexName { get; set; } = "products";
+    public const string SectionName = "Elastic";
+
+    public string BaseUrl { get; set; } = string.Empty;
+
+    public string ProductsIndex { get; set; } = string.Empty;
+    //public string CategoriesIndex { get; set; } = string.Empty;
+    //public string BrandsIndex { get; set; } = string.Empty;
 }

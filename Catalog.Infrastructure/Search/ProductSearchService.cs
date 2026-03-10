@@ -139,7 +139,7 @@ public class ProductSearchService : IProductSearchService
 
         // mengirim request ke elasticsearch
         var response = await _httpClient.PostAsync(
-            $"/{_options.IndexName}/_search",
+            $"/{_options.ProductsIndex}/_search",
             new StringContent(json, Encoding.UTF8, "application/json"),
             cancellationToken);
 

@@ -39,7 +39,7 @@ public class ProductIndexer : IProductIndexer
             {
                 index = new
                 {
-                    _index = _options.IndexName,
+                    _index = _options.ProductsIndex,
                     _id = p.Id
                 }
             };
@@ -68,7 +68,7 @@ public class ProductIndexer : IProductIndexer
     // </summary>
     private async Task EnsureIndexAsync(CancellationToken cancellationToken)
     {
-        var exists = await _httpClient.GetAsync($"/{_options.IndexName}", cancellationToken);
+        var exists = await _httpClient.GetAsync($"/{_options.ProductsIndex}", cancellationToken);
 
         if (exists.IsSuccessStatusCode) return;
 
@@ -88,7 +88,7 @@ public class ProductIndexer : IProductIndexer
         """;
 
         var content = new StringContent(mapping, Encoding.UTF8, "application/json");
-        var response = await _httpClient.PutAsync($"/{_options.IndexName}", content, cancellationToken);
+        var response = await _httpClient.PutAsync($"/{_options.ProductsIndex}", content, cancellationToken);
         response.EnsureSuccessStatusCode();
     }
 }

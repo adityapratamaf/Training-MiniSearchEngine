@@ -19,8 +19,17 @@ public static class InfrastructureServiceRegistration
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("Postgres")));
 
+        // untuk register dan validasi konfigurasi elasticoptions ke DI container
+        services
+            .AddOptions<ElasticOptions>()
+            .Bind(configuration.GetSection(ElasticOptions.SectionName))
+            .Validate(options => !string.IsNullOrWhiteSpace(options.BaseUrl), "Elastic:BaseUrl wajib diisi.")
+            .Validate(options => !string.IsNullOrWhiteSpace(options.ProductsIndex), "Elastic:ProductsIndex wajib diisi.")
+            .ValidateOnStart();
+
         services.Configure<ElasticOptions>(configuration.GetSection("Elastic"));
 
+        // mendaftarkan productindexer dengan BaseAddress Elasticsearch dari konfigurasi
         services.AddHttpClient<IProductIndexer, ProductIndexer>((sp, client) =>
         {
             var options = sp.GetRequiredService<IOptions<ElasticOptions>>().Value;
