@@ -189,7 +189,7 @@ public static class ProductFactory
             Name = $"{name} {adjective}",
             Category = category,
             Price = price,
-            Description = descriptions[random.Next(descriptions.Length)];
+            Description = descriptions[random.Next(descriptions.Length)],
             CreatedAtUtc = DateTime.UtcNow.AddDays(-random.Next(0, 365))
         };
     }

@@ -18,15 +18,26 @@ public class ProductSeeder : IProductSeeder
         var count = await _dbContext.Products.CountAsync(cancellationToken);
         if (count > 0) return;
 
+        const int totalData = 500000;
+        const int batchSize = 1000;
+
         var random = new Random();
-        var products = new List<Catalog.Domain.Entities.Product>();
 
-        for (var i = 0; i < 500000; i++)
+        for (var i = 0; i < totalData; i += batchSize)
         {
-            products.Add(ProductFactory.Create(random));
-        }
+            var products = new List<Catalog.Domain.Entities.Product>(batchSize);
 
-        await _dbContext.Products.AddRangeAsync(products, cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+            for (var j = 0; j < batchSize && i + j < totalData; j++)
+            {
+                products.Add(ProductFactory.Create(random));
+            }
+
+            await _dbContext.Products.AddRangeAsync(products, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            _dbContext.ChangeTracker.Clear();
+
+            Console.WriteLine($"Seeded {Math.Min(i + batchSize, totalData)} / {totalData}");
+        }
     }
 }
