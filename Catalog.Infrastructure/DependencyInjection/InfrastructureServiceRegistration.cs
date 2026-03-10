@@ -36,6 +36,7 @@ public static class InfrastructureServiceRegistration
             client.BaseAddress = new Uri(options.BaseUrl);
         });
 
+        // mendaftarkan HttpClient untuk ProductSearchService dengan BaseAddress Elasticsearch dari konfigurasi
         services.AddHttpClient<IProductSearchService, ProductSearchService>((sp, client) =>
         {
             var options = sp.GetRequiredService<IOptions<ElasticOptions>>().Value;

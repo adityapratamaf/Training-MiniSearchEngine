@@ -64,7 +64,7 @@ public class ProductIndexer : IProductIndexer
     }
 
     // <summary>
-    // set indeks untuk produk sudah ada di elasticsearch
+    // set indeks mapping untuk data produk sudah ada di elasticsearch
     // </summary>
     private async Task EnsureIndexAsync(CancellationToken cancellationToken)
     {
