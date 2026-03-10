@@ -21,7 +21,7 @@ public class ProductSeeder : IProductSeeder
         var random = new Random();
         var products = new List<Catalog.Domain.Entities.Product>();
 
-        for (var i = 0; i < 1000; i++)
+        for (var i = 0; i < 500000; i++)
         {
             products.Add(ProductFactory.Create(random));
         }
