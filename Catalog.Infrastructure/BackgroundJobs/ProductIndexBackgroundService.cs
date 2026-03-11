@@ -1,4 +1,5 @@
 ﻿using Catalog.Application.Interfaces;
+using Catalog.Domain.Entities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -27,7 +28,7 @@ public class ProductIndexBackgroundService : BackgroundService
     // method utama dari background service yang akan terus berjalan selama aplikasi berjalan,
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("ProductIndexBackgroundService started...");
+        _logger.LogInformation("ProductIndexBackgroundService Started...");
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -42,16 +43,16 @@ public class ProductIndexBackgroundService : BackgroundService
                 {
                     case "Upsert":
                         await syncService.UpsertAsync(message.ProductId, stoppingToken);
-                        _logger.LogInformation("Product {ProductId} upserted to Elasticsearch.", message.ProductId);
+                        _logger.LogInformation("SaveChanges {ProductId} Upsert To Elastisearch.", message.ProductId);
                         break;
 
                     case "Delete":
                         await syncService.DeleteAsync(message.ProductId, stoppingToken);
-                        _logger.LogInformation("Product {ProductId} deleted from Elasticsearch.", message.ProductId);
+                        _logger.LogInformation("SaveChanges {ProductId} Delete From Elastisearch.", message.ProductId);
                         break;
 
                     default:
-                        _logger.LogWarning("Unknown product index action: {Action}", message.Action);
+                        _logger.LogWarning("Unknown Product Index Action: {Action}", message.Action);
                         break;
                 }
             }
@@ -65,6 +66,6 @@ public class ProductIndexBackgroundService : BackgroundService
             }
         }
 
-        _logger.LogInformation("ProductIndexBackgroundService stopped...");
+        _logger.LogInformation("ProductIndexBackgroundService Stopped...");
     }
 }

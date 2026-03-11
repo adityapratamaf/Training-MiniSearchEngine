@@ -39,6 +39,7 @@ public class InMemoryProductIndexQueue : IProductIndexQueue
 {
     private readonly Channel<ProductIndexMessage> _queue;
 
+    // pada konstruktor, kita membuat channel dengan kapasitas terbatas (bounded) untuk mencegah penggunaan memori yang tidak terkendali jika terlalu banyak pesan yang masuk
     public InMemoryProductIndexQueue()
     {
         var options = new BoundedChannelOptions(10000)
@@ -48,12 +49,13 @@ public class InMemoryProductIndexQueue : IProductIndexQueue
 
         _queue = Channel.CreateBounded<ProductIndexMessage>(options);
     }
-
+    // metode untuk menambahkan pesan ke antrian secara asink
     public async ValueTask EnqueueAsync(ProductIndexMessage message, CancellationToken cancellationToken = default)
     {
         await _queue.Writer.WriteAsync(message, cancellationToken);
     }
 
+    // metode untuk mengambil pesan dari antrian secara asink
     public async ValueTask<ProductIndexMessage> DequeueAsync(CancellationToken cancellationToken)
     {
         return await _queue.Reader.ReadAsync(cancellationToken);

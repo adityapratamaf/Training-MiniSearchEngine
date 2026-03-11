@@ -34,7 +34,9 @@ public class ProductCommandService : IProductCommandService
         };
 
         _dbContext.Products.Add(product);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        var createdRow = await _dbContext.SaveChangesAsync(cancellationToken);
+        Console.WriteLine($"SaveChanges Created Row To Database: {createdRow}, ProductId: {product.Id}, ProductName: {product.Name}");
 
         // setelah data produk berhasil dibuat (create), kirim pesan ke antrian untuk diindeks ulang di Elasticsearch
         await _productIndexQueue.EnqueueAsync(new ProductIndexMessage
@@ -52,7 +54,7 @@ public class ProductCommandService : IProductCommandService
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
         if (product is null)
-            throw new KeyNotFoundException($"Product with id '{request.Id}' was not found.");
+            throw new KeyNotFoundException($"Product With Id '{request.Id}' Not Found.");
 
         product.Name = request.Name;
         product.Category = request.Category;
@@ -77,10 +79,12 @@ public class ProductCommandService : IProductCommandService
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (product is null)
-            throw new KeyNotFoundException($"Product with id '{id}' was not found.");
+            throw new KeyNotFoundException($"Product With Id '{id}' Not Found.");
 
         _dbContext.Products.Remove(product);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        var deletedRow = await _dbContext.SaveChangesAsync(cancellationToken);
+        Console.WriteLine($"SaveChanges Delete Row From Database: {deletedRow}, ProductId: {product.Id}, ProductName: {product.Name}");
 
         // setelah data produk berhasil dihapus (delete), kirim pesan ke antrian untuk diindeks ulang di Elasticsearch
         await _productIndexQueue.EnqueueAsync(new ProductIndexMessage
