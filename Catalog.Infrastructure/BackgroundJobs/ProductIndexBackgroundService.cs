@@ -15,10 +15,7 @@ public class ProductIndexBackgroundService : BackgroundService
     private readonly IProductIndexQueue _productIndexQueue;
     private readonly ILogger<ProductIndexBackgroundService> _logger;
 
-    public ProductIndexBackgroundService(
-        IServiceScopeFactory serviceScopeFactory,
-        IProductIndexQueue productIndexQueue,
-        ILogger<ProductIndexBackgroundService> logger)
+    public ProductIndexBackgroundService(IServiceScopeFactory serviceScopeFactory, IProductIndexQueue productIndexQueue, ILogger<ProductIndexBackgroundService> logger)
     {
         _serviceScopeFactory = serviceScopeFactory;
         _productIndexQueue = productIndexQueue;
