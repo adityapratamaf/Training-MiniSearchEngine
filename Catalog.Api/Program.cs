@@ -58,11 +58,13 @@ using (var scope = app.Services.CreateScope())
     var db = services.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
 
-    var seeder = services.GetRequiredService<IProductSeeder>();
-    await seeder.SeedAsync();
+    // TODO : untuk seeding data awal, sebaiknya dilakukan hanya sekali saja, jika sudah seeding maka bagian ini bisa dikomentari.
+    // var seeder = services.GetRequiredService<IProductSeeder>();
+    // await seeder.SeedAsync();
 
-    var indexer = services.GetRequiredService<IProductIndexer>();
-    await indexer.ReindexAllAsync();
+    // TODO : untuk reindex produk ke elasticsearch, sebaiknya dilakukan hanya sekali saja setelah seeding data, jika sudah reindex maka bagian ini bisa dikomentari.
+    //var indexer = services.GetRequiredService<IProductIndexer>();
+    //await indexer.ReindexAllAsync();
 }
 
 app.Run();

@@ -112,7 +112,7 @@ public static class ProductFactory
         "Juice",
         "Camera",
         "Cup",
-        "Bottle",
+        "Botol",
         "Bag",
         "Cable",
         "T-Shirt",
@@ -156,12 +156,15 @@ public static class ProductFactory
         "Flashdisk",
         "Harddisk",
         "Router WiFi",
-        "Sumatera",
-        "Sumatra",
         "North Sumatera",
-        "Sumatra Barat",
+        "Sumatera Barat",
+        "Jakarta Utara",
         "Bakpia Yogyakarta",
-        "Jogjakarta Bakpia"
+        "Jogjakarta Bakpia",
+        "Pulpen",
+        "Pensil",
+        "Celana Jeans",
+        "Kaos",
     ];
 
     public static Product Create(Random random)
