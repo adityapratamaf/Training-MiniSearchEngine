@@ -9,8 +9,8 @@ public static class ProductEndpoints
     {
         var productGroup = app.MapGroup("/api/products").WithTags("Products");
 
-        // Search
-        productGroup.MapGet("/search", async (IProductSearchService productSearchService,
+        // Search By Text
+        productGroup.MapGet("/search-by-text", async (IProductSearchService productSearchService,
             string? queryParam,
             string? category,
             decimal? minPrice,
@@ -34,6 +34,29 @@ public static class ProductEndpoints
             var result = await productSearchService.SearchAsync(request, cancellationToken);
             return Results.Ok(result);
         });
+
+        // Search By Image
+        productGroup.MapPost("/search-by-image", async (IProductSearchService productSearchService,
+            IFormFile image,
+            int page = 1,
+            int pageSize = 10,
+            CancellationToken cancellationToken = default) =>
+        {
+            if (image is null || image.Length == 0)
+                return Results.BadRequest("Image File Required.");
+
+            await using var ms = new MemoryStream();
+            await image.CopyToAsync(ms, cancellationToken);
+
+            var result = await productSearchService.SearchByImageAsync(
+                ms.ToArray(),
+                page <= 0 ? 1 : page,
+                pageSize <= 0 ? 10 : pageSize,
+                cancellationToken);
+
+            return Results.Ok(result);
+        })
+        .DisableAntiforgery();
 
         // Create
         productGroup.MapPost("/", async (IProductCommandService productCommandService, CreateProductRequest request, CancellationToken cancellationToken) =>

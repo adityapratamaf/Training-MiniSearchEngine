@@ -11,11 +11,45 @@ public class ProductSearchService : IProductSearchService
 {
     private readonly HttpClient _httpClient;
     private readonly ElasticOptions _options;
+    private readonly IOcrService _ocrService;
 
-    public ProductSearchService(HttpClient httpClient, IOptions<ElasticOptions> options)
+    public ProductSearchService(HttpClient httpClient, IOptions<ElasticOptions> options, IOcrService ocrService)
     {
         _httpClient = httpClient;
         _options = options.Value;
+        _ocrService = ocrService;
+    }
+
+    // <summary>
+    // service untuk melakukan pencarian product menggunakan elasticsearch dengan input berupa gambar yang menggunakan OCR untuk mengekstrak teks dari gambar, lalu menggunakan teks tersebut sebagai query pencarian di Elasticsearch.
+    // </summary>
+    public async Task<PagedResponse<ProductResponse>> SearchByImageAsync(
+        byte[] imageBytes,
+        int page = 1,
+        int pageSize = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var extractedText = await _ocrService.ExtractTextAsync(imageBytes, cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(extractedText))
+        {
+            return new PagedResponse<ProductResponse>
+            {
+                Page = page,
+                PageSize = pageSize,
+                Total = 0,
+                Items = new List<ProductResponse>()
+            };
+        }
+
+        var request = new ProductSearchRequest
+        {
+            QueryParam = extractedText,
+            Page = page,
+            PageSize = pageSize
+        };
+
+        return await SearchAsync(request, cancellationToken);
     }
 
     /// <summary>
