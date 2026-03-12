@@ -1,7 +1,9 @@
 using Catalog.Application.Interfaces;
+using Catalog.Infrastructure.BackgroundJobs;
 using Catalog.Infrastructure.Persistence;
 using Catalog.Infrastructure.Search;
 using Catalog.Infrastructure.Seeding;
+using Catalog.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,15 +31,26 @@ public static class InfrastructureServiceRegistration
 
         services.Configure<ElasticOptions>(configuration.GetSection("Elastic"));
 
-        // mendaftarkan productindexer dengan BaseAddress Elasticsearch dari konfigurasi
+        // mendaftarkan productindexer service dengan BaseAddress Elasticsearch dari konfigurasi
         services.AddHttpClient<IProductIndexer, ProductIndexer>((sp, client) =>
         {
             var options = sp.GetRequiredService<IOptions<ElasticOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl);
         });
 
-        // mendaftarkan HttpClient untuk ProductSearchService dengan BaseAddress Elasticsearch dari konfigurasi
+        // mendaftarkan HttpClient service untuk ProductSearchService dengan BaseAddress Elasticsearch dari konfigurasi
         services.AddHttpClient<IProductSearchService, ProductSearchService>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<ElasticOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl);
+        });
+
+        // mendaftarkan sync service untuk menyinkronkan data produk dari database ke Elasticsearch
+        services.AddScoped<IProductCommandService, ProductCommandService>();
+        services.AddSingleton<IProductIndexQueue, InMemoryProductIndexQueue>();
+        services.AddHostedService<ProductIndexBackgroundService>();
+
+        services.AddHttpClient<IElasticProductSyncService, ElasticProductSyncService>((sp, client) =>
         {
             var options = sp.GetRequiredService<IOptions<ElasticOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl);

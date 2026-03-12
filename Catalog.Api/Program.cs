@@ -45,6 +45,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.MapControllers();
+//app.UseCors("AllowFrontend");
 app.MapProductEndpoints();
 
 // <summary>
