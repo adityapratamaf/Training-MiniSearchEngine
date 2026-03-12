@@ -36,21 +36,14 @@ public static class ProductEndpoints
         });
 
         // Create
-        productGroup.MapPost("/", async (
-            IProductCommandService productCommandService,
-            CreateProductRequest request,
-            CancellationToken cancellationToken) =>
+        productGroup.MapPost("/", async (IProductCommandService productCommandService, CreateProductRequest request, CancellationToken cancellationToken) =>
         {
             var result = await productCommandService.CreateAsync(request, cancellationToken);
             return Results.Created($"/api/products/{result.Id}", result);
         });
 
         // Edit
-        productGroup.MapPut("/{id:guid}", async (
-            IProductCommandService productCommandService,
-            Guid id,
-            UpdateProductRequest request,
-            CancellationToken cancellationToken) =>
+        productGroup.MapPut("/{id:guid}", async (IProductCommandService productCommandService, Guid id, UpdateProductRequest request, CancellationToken cancellationToken) =>
         {
             request.Id = id;
             var result = await productCommandService.UpdateAsync(request, cancellationToken);
@@ -58,10 +51,7 @@ public static class ProductEndpoints
         });
 
         // Delete
-        productGroup.MapDelete("/{id:guid}", async (
-            IProductCommandService productCommandService,
-            Guid id,
-            CancellationToken cancellationToken) =>
+        productGroup.MapDelete("/{id:guid}", async (IProductCommandService productCommandService, Guid id, CancellationToken cancellationToken) =>
         {
             await productCommandService.DeleteAsync(id, cancellationToken);
             return Results.NoContent();
