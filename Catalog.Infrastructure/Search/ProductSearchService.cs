@@ -25,6 +25,7 @@ public class ProductSearchService : IProductSearchService
     // </summary>
     public async Task<PagedResponse<ProductResponse>> SearchByImageAsync(byte[] imageBytes, ProductSearchRequest request, CancellationToken cancellationToken = default)
     {
+        // ekstrak teks dari gambar menggunakan OCR
         var extractedText = await _ocrService.ExtractTextAsync(imageBytes, cancellationToken);
 
         if (string.IsNullOrWhiteSpace(extractedText))
@@ -38,8 +39,10 @@ public class ProductSearchService : IProductSearchService
             };
         }
 
+        // gunakan teks yang diekstrak sebagai query pencarian
         request.QueryParam = extractedText;
 
+        // lanjutkan dengan pencarian menggunakan teks yang diekstrak
         return await SearchAsync(request, cancellationToken);
     }
 

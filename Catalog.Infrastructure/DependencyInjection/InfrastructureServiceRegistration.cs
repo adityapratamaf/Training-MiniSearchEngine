@@ -46,7 +46,7 @@ public static class InfrastructureServiceRegistration
             client.BaseAddress = new Uri(options.BaseUrl);
         });
 
-        // ocr
+        // ocr service untuk mengekstrak teks dari gambar menggunakan Tesseract OCR
         services.AddScoped<IOcrService, TesseractOcrService>();
 
         // mendaftarkan sync service untuk menyinkronkan data produk dari database ke Elasticsearch

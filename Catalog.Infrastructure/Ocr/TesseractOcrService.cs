@@ -4,15 +4,21 @@ using Tesseract;
 
 namespace Catalog.Infrastructure.Ocr;
 
+// <summary>
+// service untuk melakukan OCR menggunakan Tesseract, yang akan mengekstrak teks dari gambar yang diunggah oleh pengguna.
+// Ini akan memungkinkan pengguna untuk mencari produk berdasarkan teks yang terdapat dalam gambar, seperti nama produk atau merek.
+// </summary>
 public class TesseractOcrService : IOcrService
 {
     private readonly string _tessDataPath;
 
+    // Konstruktor untuk TesseractOcrService yang menerima IHostEnvironment untuk menentukan lokasi folder tessdata.
     public TesseractOcrService(IHostEnvironment env)
     {
         _tessDataPath = Path.Combine(AppContext.BaseDirectory, "tessdata");
     }
 
+    // Metode untuk mengekstrak teks dari gambar menggunakan Tesseract OCR. Ini memuat gambar dari byte array, memprosesnya dengan Tesseract, dan mengembalikan teks yang diekstrak.
     public Task<string> ExtractTextAsync(byte[] fileBytes, CancellationToken cancellationToken = default)
     {
         Console.WriteLine($"TessdataPath: {_tessDataPath}");
