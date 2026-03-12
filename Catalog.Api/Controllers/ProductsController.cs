@@ -44,6 +44,9 @@ public static class ProductEndpoints
             if (image is null || image.Length == 0)
                 return Results.BadRequest("Image File Required.");
 
+            if (!image.ContentType.StartsWith("image/"))
+                return Results.BadRequest("Invalid Image File.");
+
             await using var ms = new MemoryStream();
             await image.CopyToAsync(ms, cancellationToken);
 

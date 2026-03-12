@@ -4,6 +4,7 @@ using Catalog.Infrastructure.DependencyInjection;
 using Catalog.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,8 +42,21 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+// api documentation
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+
+    app.MapScalarApiReference(options =>
+    {
+        options.WithTitle("ECommerce.Api");
+        options.WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json");
+    });
+}
+
+//app.UseSwagger();
+//app.UseSwaggerUI();
 
 app.MapControllers();
 //app.UseCors("AllowFrontend");
