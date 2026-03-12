@@ -21,13 +21,9 @@ public class ProductSearchService : IProductSearchService
     }
 
     // <summary>
-    // service untuk melakukan pencarian product menggunakan elasticsearch dengan input berupa gambar yang menggunakan OCR untuk mengekstrak teks dari gambar, lalu menggunakan teks tersebut sebagai query pencarian di Elasticsearch.
+    // service untuk melakukan pencarian dengan input berupa gambar yang menggunakan OCR untuk mengekstrak teks dari gambar, lalu menggunakan teks tersebut sebagai query pencarian di Elasticsearch.
     // </summary>
-    public async Task<PagedResponse<ProductResponse>> SearchByImageAsync(
-        byte[] imageBytes,
-        int page = 1,
-        int pageSize = 10,
-        CancellationToken cancellationToken = default)
+    public async Task<PagedResponse<ProductResponse>> SearchByImageAsync(byte[] imageBytes, ProductSearchRequest request, CancellationToken cancellationToken = default)
     {
         var extractedText = await _ocrService.ExtractTextAsync(imageBytes, cancellationToken);
 
@@ -35,19 +31,14 @@ public class ProductSearchService : IProductSearchService
         {
             return new PagedResponse<ProductResponse>
             {
-                Page = page,
-                PageSize = pageSize,
+                Page = request.Page <= 0 ? 1 : request.Page,
+                PageSize = request.PageSize <= 0 ? 10 : request.PageSize,
                 Total = 0,
                 Items = new List<ProductResponse>()
             };
         }
 
-        var request = new ProductSearchRequest
-        {
-            QueryParam = extractedText,
-            Page = page,
-            PageSize = pageSize
-        };
+        request.QueryParam = extractedText;
 
         return await SearchAsync(request, cancellationToken);
     }

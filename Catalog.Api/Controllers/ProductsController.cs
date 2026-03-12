@@ -36,8 +36,7 @@ public static class ProductEndpoints
         });
 
         // Search By Image
-        productGroup.MapPost("/search-by-image", async (IProductSearchService productSearchService,
-            IFormFile image,
+        productGroup.MapPost("/search-by-image", async (IFormFile image, IProductSearchService productSearchService,
             int page = 1,
             int pageSize = 10,
             CancellationToken cancellationToken = default) =>
@@ -48,10 +47,15 @@ public static class ProductEndpoints
             await using var ms = new MemoryStream();
             await image.CopyToAsync(ms, cancellationToken);
 
+            var request = new ProductSearchRequest
+            {
+                Page = page,
+                PageSize = pageSize
+            };
+
             var result = await productSearchService.SearchByImageAsync(
                 ms.ToArray(),
-                page <= 0 ? 1 : page,
-                pageSize <= 0 ? 10 : pageSize,
+                request,
                 cancellationToken);
 
             return Results.Ok(result);
