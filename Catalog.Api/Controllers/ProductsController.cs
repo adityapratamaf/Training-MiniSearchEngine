@@ -38,6 +38,11 @@ public static class ProductEndpoints
         // Create
         productGroup.MapPost("/", async (IProductCommandService productCommandService, CreateProductRequest request, CancellationToken cancellationToken) =>
         {
+            if (string.IsNullOrWhiteSpace(request.Name))
+            {
+                return Results.BadRequest("Product Name Required.");
+            }
+
             var result = await productCommandService.CreateAsync(request, cancellationToken);
             return Results.Created($"/api/products/{result.Id}", result);
         });
@@ -46,6 +51,17 @@ public static class ProductEndpoints
         productGroup.MapPut("/{id:guid}", async (IProductCommandService productCommandService, Guid id, UpdateProductRequest request, CancellationToken cancellationToken) =>
         {
             request.Id = id;
+
+            if (id == Guid.Empty)
+                {
+                return Results.BadRequest("Invalid Product Id.");
+            }
+
+            if (!await productCommandService.ExistsAsync(id, cancellationToken))
+            {
+                return Results.NotFound($"Product With Id '{id}' Not Found.");
+            }
+
             var result = await productCommandService.UpdateAsync(request, cancellationToken);
             return Results.Ok(result);
         });
@@ -53,6 +69,16 @@ public static class ProductEndpoints
         // Delete
         productGroup.MapDelete("/{id:guid}", async (IProductCommandService productCommandService, Guid id, CancellationToken cancellationToken) =>
         {
+            if (id == Guid.Empty)
+            {
+                return Results.BadRequest("Invalid Product Id.");
+            }
+
+            if (!await productCommandService.ExistsAsync(id, cancellationToken))
+            {
+                return Results.NotFound($"Product With Id '{id}' Not Found.");
+            }
+
             await productCommandService.DeleteAsync(id, cancellationToken);
             return Results.NoContent();
         });

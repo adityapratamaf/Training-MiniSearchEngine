@@ -21,6 +21,11 @@ public class ProductCommandService : IProductCommandService
         _productIndexQueue = productIndexQueue;
     }
 
+    public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Products.AnyAsync(x => x.Id == id, cancellationToken);
+    }
+
     public async Task<Product> CreateAsync(CreateProductRequest request, CancellationToken cancellationToken = default)
     {
         var product = new Product
