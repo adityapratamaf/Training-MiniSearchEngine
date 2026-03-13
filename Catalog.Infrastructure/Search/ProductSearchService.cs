@@ -11,11 +11,39 @@ public class ProductSearchService : IProductSearchService
 {
     private readonly HttpClient _httpClient;
     private readonly ElasticOptions _options;
+    private readonly IOcrService _ocrService;
 
-    public ProductSearchService(HttpClient httpClient, IOptions<ElasticOptions> options)
+    public ProductSearchService(HttpClient httpClient, IOptions<ElasticOptions> options, IOcrService ocrService)
     {
         _httpClient = httpClient;
         _options = options.Value;
+        _ocrService = ocrService;
+    }
+
+    // <summary>
+    // service untuk melakukan pencarian dengan input berupa gambar yang menggunakan OCR untuk mengekstrak teks dari gambar, lalu menggunakan teks tersebut sebagai query pencarian di Elasticsearch.
+    // </summary>
+    public async Task<PagedResponse<ProductResponse>> SearchByImageAsync(byte[] imageBytes, ProductSearchRequest request, CancellationToken cancellationToken = default)
+    {
+        // ekstrak teks dari gambar menggunakan OCR
+        var extractedText = await _ocrService.ExtractTextAsync(imageBytes, cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(extractedText))
+        {
+            return new PagedResponse<ProductResponse>
+            {
+                Page = request.Page <= 0 ? 1 : request.Page,
+                PageSize = request.PageSize <= 0 ? 10 : request.PageSize,
+                Total = 0,
+                Items = new List<ProductResponse>()
+            };
+        }
+
+        // gunakan teks yang diekstrak sebagai query pencarian
+        request.QueryParam = extractedText;
+
+        // lanjutkan dengan pencarian menggunakan teks yang diekstrak
+        return await SearchAsync(request, cancellationToken);
     }
 
     /// <summary>
@@ -45,7 +73,9 @@ public class ProductSearchService : IProductSearchService
                     {
                         "name",
                         "name._2gram",
-                        "name._3gram"
+                        "name._3gram",
+                        "description",
+                        "category",
                     },
                     boost = 2
                 }
@@ -59,7 +89,7 @@ public class ProductSearchService : IProductSearchService
                     query = request.QueryParam,
                     fields = new[]
                     {
-                        "name^3",
+                        "name^5",
                         "description",
                         "category"
                     },

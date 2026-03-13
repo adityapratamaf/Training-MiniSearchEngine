@@ -4,6 +4,7 @@ using Catalog.Infrastructure.Persistence;
 using Catalog.Infrastructure.Search;
 using Catalog.Infrastructure.Seeding;
 using Catalog.Infrastructure.Services;
+using Catalog.Infrastructure.Ocr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -44,6 +45,9 @@ public static class InfrastructureServiceRegistration
             var options = sp.GetRequiredService<IOptions<ElasticOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl);
         });
+
+        // ocr service untuk mengekstrak teks dari gambar menggunakan Tesseract OCR
+        services.AddScoped<IOcrService, TesseractOcrService>();
 
         // mendaftarkan sync service untuk menyinkronkan data produk dari database ke Elasticsearch
         services.AddScoped<IProductCommandService, ProductCommandService>();

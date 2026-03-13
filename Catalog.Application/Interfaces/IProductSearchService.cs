@@ -10,4 +10,6 @@ namespace Catalog.Application.Interfaces;
 public interface IProductSearchService
 {
     Task<PagedResponse<ProductResponse>> SearchAsync(ProductSearchRequest request, CancellationToken cancellationToken = default);
+
+    Task<PagedResponse<ProductResponse>> SearchByImageAsync(byte[] imageBytes, ProductSearchRequest request, CancellationToken cancellationToken = default);
 }

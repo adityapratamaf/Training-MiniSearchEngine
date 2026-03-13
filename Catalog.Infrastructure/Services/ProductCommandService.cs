@@ -21,6 +21,7 @@ public class ProductCommandService : IProductCommandService
         _productIndexQueue = productIndexQueue;
     }
 
+    // untuk memeriksa apakah produk dengan ID tertentu sudah ada di database
     public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _dbContext.Products.AnyAsync(x => x.Id == id, cancellationToken);
