@@ -73,7 +73,9 @@ public class ProductSearchService : IProductSearchService
                     {
                         "name",
                         "name._2gram",
-                        "name._3gram"
+                        "name._3gram",
+                        "description",
+                        "category",
                     },
                     boost = 2
                 }
@@ -87,7 +89,7 @@ public class ProductSearchService : IProductSearchService
                     query = request.QueryParam,
                     fields = new[]
                     {
-                        "name^3",
+                        "name^5",
                         "description",
                         "category"
                     },

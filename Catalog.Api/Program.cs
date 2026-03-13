@@ -55,8 +55,10 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseCors("AllowFrontend");
+
 app.MapControllers();
-//app.UseCors("AllowFrontend");
+
 app.MapProductEndpoints();
 
 // <summary>

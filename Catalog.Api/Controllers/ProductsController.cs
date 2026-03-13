@@ -113,5 +113,61 @@ public static class ProductEndpoints
             return Results.NoContent();
         });
 
+        productGroup.MapGet("/categories", () =>
+        {
+            var categories = new[]
+            {
+                "Electronic",
+                "Elektronik",
+                "Fashion",
+                "Home",
+                "Rumah Tangga",
+                "Sports",
+                "Olahraga",
+                "Stationery",
+                "Alat Tulis",
+                "Household",
+                "Toys",
+                "Mainan",
+                "Automotive",
+                "Otomotif",
+                "Books",
+                "Buku",
+                "Health",
+                "Kesehatan",
+                "Beauty",
+                "Kecantikan",
+                "Grocery",
+                "Sembako",
+                "Garden",
+                "Taman",
+                "Music",
+                "Musik",
+                "Office",
+                "Perkantoran",
+                "Food",
+                "Makanan",
+                "Drink",
+                "Minuman",
+                "Pet Supplies",
+                "Perlengkapan Hewan",
+                "Baby",
+                "Perlengkapan Bayi",
+                "Industrial",
+                "Industri",
+                "Art",
+                "Seni",
+                "Crafts",
+                "Kerajinan",
+                "Jewelry",
+                "Perhiasan",
+                "Outdoor",
+                "Camping",
+                "Travel"
+            };
+
+            return Results.Ok(categories.OrderBy(x => x));
+        });
+
     }
 }
