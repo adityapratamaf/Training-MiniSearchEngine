@@ -113,6 +113,7 @@ public static class ProductEndpoints
             return Results.NoContent();
         });
 
+        // Category
         productGroup.MapGet("/categories", () =>
         {
             var categories = new[]
