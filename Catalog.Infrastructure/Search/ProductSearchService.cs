@@ -42,7 +42,7 @@ public class ProductSearchService : IProductSearchService
         // gunakan teks yang diekstrak sebagai query pencarian
         request.QueryParam = extractedText;
 
-        // lanjutkan dengan pencarian menggunakan teks yang diekstrak
+        // lanjutkan dengan pencarian menggunakan teks yang diekstrak ocr
         return await SearchAsync(request, cancellationToken);
     }
 
