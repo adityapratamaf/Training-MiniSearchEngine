@@ -64,6 +64,8 @@ app.MapScalarApiReference(options =>
     options.WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json");
 });
 
+app.UseStaticFiles();
+
 app.UseCors("AllowFrontend");
 
 app.MapControllers();
