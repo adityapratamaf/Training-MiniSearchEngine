@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <title>Mini Search Engine Frontend</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121933;
+      --panel-2: #1a2242;
+      --text: #eef2ff;
+      --muted: #aab4d6;
+      --accent: #6ea8fe;
+      --border: #2a3566;
+      --danger: #ff7b7b;
+      --success: #7ee787;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background: linear-gradient(180deg, #0b1020 0%, #0e1530 100%);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: rgba(18, 25, 51, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      font-size: 20px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    input, select, button {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      padding: 12px 14px;
+      font-size: 14px;
+    }
+
+    input::file-selector-button {
+      background: var(--accent);
+      color: #06122e;
+      border: 0;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-right: 10px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button {
+      cursor: pointer;
+      background: var(--accent);
+      color: #06122e;
+      font-weight: 700;
+      transition: transform 0.12s ease, opacity 0.12s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.65; cursor: not-allowed; }
+
+    .secondary {
+      background: transparent;
+      color: var(--text);
+    }
+
+    .status {
+      margin-top: 14px;
+      min-height: 22px;
+      font-size: 14px;
+    }
+
+    .status.error { color: var(--danger); }
+    .status.success { color: var(--success); }
+    .status.muted { color: var(--muted); }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .results {
+      display: grid;
+      gap: 14px;
+    }
+
+    .product {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .product h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      background: #223061;
+      color: #dbe7ff;
+      border: 1px solid #33488c;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+
+    .description {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .pagination {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 16px;
+    }
+
+    .empty {
+      padding: 24px;
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    code.inline {
+      background: rgba(255,255,255,0.07);
+      padding: 2px 6px;
+      border-radius: 6px;
+      color: #dce8ff;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* KEYWORD SUGGESTION */
+    .suggestion-wrapper {
+      position: relative;
+    }
+
+    .suggestion-box {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      z-index: 100;
+    }
+
+    .suggestion-item {
+      padding: 12px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      background: var(--panel);
+    }
+
+    .suggestion-item:last-child {
+      border-bottom: none;
+    }
+
+    .suggestion-item:hover {
+      background: var(--panel-2);
+    }
+
+    .suggestion-name {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .suggestion-meta {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* SELECT CATEGORIES */
+    .select2-container {
+      width: 100% !important;
+    }
+
+    .select2-container--default .select2-selection--single {
+      height: 46px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      color: var(--text);
+      line-height: 44px;
+      padding-left: 14px;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 44px;
+    }
+
+    .select2-dropdown {
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    .select2-search__field {
+      background: var(--panel-2) !important;
+      color: var(--text) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 8px !important;
+    }
+
+    .select2-results__option {
+      color: var(--text);
+    }
+
+    .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+      background: var(--accent);
+      color: #06122e;
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ECommerce</h1>
+    <div class="subtitle">Mini Search Engine</div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Search By Text</h2>
+        <div class="form-grid">
+          <div class="full hidden">
+            <label for="apiBaseUrl">Base URL API</label>
+            <input id="apiBaseUrl" value="http://localhost:5213" readonly />
+          </div>
+
+          <div class="full suggestion-wrapper">
+            <label for="queryParam">Keyword</label>
+            <input id="queryParam" placeholder="Keyword" autocomplete="off" />
+            <div id="suggestionBox" class="suggestion-box hidden"></div>
+          </div>
+
+          <div>
+            <label for="category">Category</label>
+            <select id="category">
+              <option value="">All Category</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="sortPrice">Sort Price</label>
+            <select id="sortPrice">
+              <option value="">Relevance</option>
+              <option value="asc">Lowest Price</option>
+              <option value="desc">Highest Price</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="minPrice">Min Price</label>
+            <input id="minPrice" type="number" min="0" step="0.01" placeholder="0" />
+          </div>
+
+          <div>
+            <label for="maxPrice">Max Price</label>
+            <input id="maxPrice" type="number" min="0" step="0.01" placeholder="1000000" />
+          </div>
+
+          <div>
+            <label for="page">Page</label>
+            <input id="page" type="number" min="1" value="1" />
+          </div>
+
+          <div>
+            <label for="pageSize">Page Size</label>
+            <input id="pageSize" type="number" min="1" value="10" />
+          </div>
+
+          <div class="full">
+            <button id="searchBtn">Search</button>
+          </div>
+        </div>
+
+        <div id="searchStatus" class="status muted"></div>
+      </div>
+
+      <div class="card">
+        <h2>Search By Image</h2>
+        <div class="form-grid">
+          <div class="full">
+            <label for="imageFile">Upload Image</label>
+            <input id="imageFile" type="file" accept="image/*" />
+          </div>
+
+          <div>
+            <label for="imagePage">Page</label>
+            <input id="imagePage" type="number" min="1" value="1" />
+          </div>
+
+          <div>
+            <label for="imagePageSize">Page Size</label>
+            <input id="imagePageSize" type="number" min="1" value="10" />
+          </div>
+
+          <div class="full">
+            <button id="imageSearchBtn">Search</button>
+          </div>
+        </div>
+
+        <div id="imageStatus" class="status muted hidden">API Allow Origin <code class="inline">http://localhost:5500</code> / <code class="inline">http://127.0.0.1:5500</code>.</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+      <div class="results-header">
+        <h2 style="margin:0;">Result</h2>
+        <div id="resultMeta" class="meta">Not Available Searching.</div>
+        <div id="requestTimeMeta" class="meta" style="margin-top:4px;">Request Time : -</div>
+      </div>
+
+      <div id="results" class="results">
+        <div class="empty">Result Searching.</div>
+      </div>
+
+      <div class="pagination">
+        <button id="prevBtn" class="secondary">Prev</button>
+        <button id="nextBtn" class="secondary">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      lastMode: null,
+      lastRequest: null,
+      currentPage: 1,
+      pageSize: 10,
+      total: 0,
+      items: [],
+      lastRequestTimeMs: null,
+      suggestionTimer: null
+    };
+
+    const el = {
+      apiBaseUrl: document.getElementById('apiBaseUrl'),
+      queryParam: document.getElementById('queryParam'),
+      category: document.getElementById('category'),
+      sortPrice: document.getElementById('sortPrice'),
+      minPrice: document.getElementById('minPrice'),
+      maxPrice: document.getElementById('maxPrice'),
+      page: document.getElementById('page'),
+      pageSize: document.getElementById('pageSize'),
+      searchBtn: document.getElementById('searchBtn'),
+      searchStatus: document.getElementById('searchStatus'),
+      imageFile: document.getElementById('imageFile'),
+      imagePage: document.getElementById('imagePage'),
+      imagePageSize: document.getElementById('imagePageSize'),
+      imageSearchBtn: document.getElementById('imageSearchBtn'),
+      imageStatus: document.getElementById('imageStatus'),
+      results: document.getElementById('results'),
+      resultMeta: document.getElementById('resultMeta'),
+      prevBtn: document.getElementById('prevBtn'),
+      nextBtn: document.getElementById('nextBtn'),
+      requestTimeMeta: document.getElementById('requestTimeMeta'),
+      suggestionBox: document.getElementById('suggestionBox'),
+    };
+
+    // TIME REQUEST
+    function formatRequestTime(value) {
+      if (value === null || value === undefined) return '-';
+      if (value < 1000) return `${value.toFixed(0)} ms`;
+      return `${(value / 1000).toFixed(2)} s`;
+    }
+
+    function setStatus(target, message, type = 'muted') {
+      target.className = `status ${type}`;
+      target.textContent = message;
+    }
+
+    function getApiBaseUrl() {
+      return el.apiBaseUrl.value.trim().replace(/\/$/, '');
+    }
+
+    function buildSearchQuery(pageOverride) {
+      const params = new URLSearchParams();
+      const queryParam = el.queryParam.value.trim();
+      const category = (el.category.value || '').trim();
+      const sortPrice = el.sortPrice.value;
+      const minPrice = el.minPrice.value.trim();
+      const maxPrice = el.maxPrice.value.trim();
+      const page = String(pageOverride ?? Number(el.page.value || 1));
+      const pageSize = String(Number(el.pageSize.value || 10));
+
+      if (queryParam) params.append('queryParam', queryParam);
+      if (category) params.append('category', category);
+      if (sortPrice) params.append('sortPrice', sortPrice);
+      if (minPrice) params.append('minPrice', minPrice);
+      if (maxPrice) params.append('maxPrice', maxPrice);
+      params.append('page', page);
+      params.append('pageSize', pageSize);
+
+      return params;
+    }
+
+    function renderResults(data) {
+      state.total = data.total ?? 0;
+      state.currentPage = data.page ?? 1;
+      state.pageSize = data.pageSize ?? 10;
+      state.items = data.items ?? [];
+
+      el.resultMeta.textContent = `Page ${state.currentPage} • Page Size ${state.pageSize} • Total ${state.total}`;
+      el.requestTimeMeta.textContent = `Request Time : ${formatRequestTime(state.lastRequestTimeMs)}`;
+
+      if (!state.items.length) {
+        el.results.innerHTML = '<div class="empty">Not Available Product.</div>';
+        return;
+      }
+
+      el.results.innerHTML = state.items.map(item => `
+        <div class="product">
+          <h3>${escapeHtml(item.name ?? '-')}</h3>
+          <div class="row">
+            <span class="badge">Category: ${escapeHtml(item.category ?? '-')}</span>
+            <span class="badge">Price: ${formatCurrency(item.price)}</span>
+          </div>
+          <div class="description">${escapeHtml(item.description ?? '-')}</div>
+        </div>
+      `).join('');
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function formatCurrency(value) {
+      if (value === null || value === undefined || Number.isNaN(Number(value))) return '-';
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(value));
+    }
+
+    // FETCH CATEGORIES
+    async function loadCategories() {
+      const apiBaseUrl = getApiBaseUrl();
+
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/products/categories`, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const categories = await response.json();
+
+        el.category.innerHTML = '<option value="" selected>All Category</option>';
+
+        categories.forEach(category => {
+          const option = document.createElement('option');
+          option.value = category;
+          option.textContent = category;
+          el.category.appendChild(option);
+        });
+
+        $('#category').select2({
+          allowClear: false,
+          width: '100%',
+        });
+
+      } catch (error) {
+        console.error('Failed Load Category:', error);
+        setStatus(el.searchStatus, `Failed Load Category : ${error.message}`, 'error');
+      }
+    }
+
+    async function handleSearch(pageOverride) {
+      const apiBaseUrl = getApiBaseUrl();
+      const params = buildSearchQuery(pageOverride);
+      const url = `${apiBaseUrl}/api/products/search-by-text?${params.toString()}`;
+
+      state.lastMode = 'search';
+      state.lastRequest = { type: 'search' };
+
+      el.searchBtn.disabled = true;
+      setStatus(el.searchStatus, 'Searching...', 'muted');
+
+      // Searching Fetch
+      try {
+        const startedAt = performance.now();
+
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(text || `HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        state.lastRequestTimeMs = performance.now() - startedAt;
+
+        renderResults(data);
+        setStatus(el.searchStatus, 'Searching Success.', 'success');
+      } catch (error) {
+        setStatus(el.searchStatus, `Search Failed: ${error.message}`, 'error');
+        el.results.innerHTML = '<div class="empty">Failed Get Data From API.</div>';
+      } finally {
+        el.searchBtn.disabled = false;
+      }
+    }
+
+    async function handleImageSearch(pageOverride) {
+      const file = el.imageFile.files?.[0];
+      if (!file) {
+        setStatus(el.imageStatus, 'Choose File Image.', 'error');
+        return;
+      }
+
+      const apiBaseUrl = getApiBaseUrl();
+      const page = String(pageOverride ?? Number(el.imagePage.value || 1));
+      const pageSize = String(Number(el.imagePageSize.value || 10));
+      const url = `${apiBaseUrl}/api/products/search-by-image?page=${encodeURIComponent(page)}&pageSize=${encodeURIComponent(pageSize)}`;
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      state.lastMode = 'image';
+      state.lastRequest = { type: 'image', file };
+
+      el.imageSearchBtn.disabled = true;
+      setStatus(el.imageStatus, 'Process Searching...', 'muted');
+
+      try {
+        const startedAt = performance.now();
+
+        const response = await fetch(url, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(text || `HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+  
+        state.lastRequestTimeMs = performance.now() - startedAt;
+
+        renderResults(data);
+        setStatus(el.imageStatus, 'Searching Success.', 'success');
+      } catch (error) {
+        setStatus(el.imageStatus, `Searching Failed: ${error.message}`, 'error');
+        el.results.innerHTML = '<div class="empty">Failed Process Search by Image.</div>';
+      } finally {
+        el.imageSearchBtn.disabled = false;
+      }
+    }
+
+    async function handlePagination(direction) {
+      const nextPage = Math.max(1, state.currentPage + direction);
+      if (nextPage === state.currentPage && direction < 0) return;
+
+      if (state.lastMode === 'search') {
+        el.page.value = String(nextPage);
+        await handleSearch(nextPage);
+        return;
+      }
+
+      if (state.lastMode === 'image') {
+        el.imagePage.value = String(nextPage);
+        await handleImageSearch(nextPage);
+      }
+    }
+
+    // KEYWORD SHOW SUGGESTION
+    function hideSuggestions() {
+      el.suggestionBox.classList.add('hidden');
+      el.suggestionBox.innerHTML = '';
+    }
+
+    function renderSuggestions(items) {
+      if (!items || !items.length) {
+        hideSuggestions();
+        return;
+      }
+
+      el.suggestionBox.innerHTML = items.map(item => `
+        <div class="suggestion-item" data-name="${escapeHtml(item.name ?? '')}">
+          <div class="suggestion-name">${escapeHtml(item.name ?? '-')}</div>
+          <div class="suggestion-meta">
+            ${escapeHtml(item.category ?? '-')} • ${formatCurrency(item.price)}
+          </div>
+        </div>
+      `).join('');
+
+      el.suggestionBox.classList.remove('hidden');
+
+      el.suggestionBox.querySelectorAll('.suggestion-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const name = item.dataset.name || '';
+          el.queryParam.value = name;
+          hideSuggestions();
+          handleSearch();
+        });
+      });
+    }
+
+    async function fetchSuggestions() {
+      const keyword = el.queryParam.value.trim();
+      const apiBaseUrl = getApiBaseUrl();
+
+      console.log('keyword:', keyword);
+
+      if (keyword.length < 2) {
+        hideSuggestions();
+        return;
+      }
+
+      const params = new URLSearchParams();
+      params.append('queryParam', keyword);
+      params.append('page', '1');
+      params.append('pageSize', '5');
+
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/products/search-by-text?${params.toString()}`, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (!response.ok) {
+          hideSuggestions();
+          return;
+        }
+
+        const data = await response.json();
+        renderSuggestions(data.items ?? []);
+      } catch {
+        hideSuggestions();
+      }
+    } // KEYWORD SHOW SUGGESTION
+
+    el.searchBtn.addEventListener('click', () => handleSearch());
+    el.imageSearchBtn.addEventListener('click', () => handleImageSearch());
+    el.prevBtn.addEventListener('click', () => handlePagination(-1));
+    el.nextBtn.addEventListener('click', () => handlePagination(1));
+
+    // CATEGORIES
+    loadCategories();
+
+    // KEYWORD SHOW SUGGESTION
+    el.queryParam.addEventListener('input', () => {
+      clearTimeout(state.suggestionTimer);
+
+    state.suggestionTimer = setTimeout(() => {
+        fetchSuggestions();
+      }, 300);
+    });
+
+    el.queryParam.addEventListener('focus', () => {
+      if (el.queryParam.value.trim().length >= 2) {
+        fetchSuggestions();
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      const wrapper = document.querySelector('.suggestion-wrapper');
+      if (wrapper && !wrapper.contains(event.target)) {
+        hideSuggestions();
+      }
+    }); // KEYWORD SHOW SUGGESTION
+
+  </script>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+</body>
+</html>
+
+<!-- // fix all -->
