@@ -23,7 +23,6 @@ RUN dotnet publish "Catalog.Api.csproj" -c Release -o /app/publish /p:UseAppHost
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
-# Install Tesseract dependencies
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     tesseract-ocr-eng \
@@ -33,10 +32,14 @@ RUN apt-get update && apt-get install -y \
     libgssapi-krb5-2 \
     && rm -rf /var/lib/apt/lists/*
 
-ENV LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
-
+ENV LD_LIBRARY_PATH=/app/runtimes/linux-x64/native:/app:/usr/lib/x86_64-linux-gnu
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 
 COPY --from=build /app/publish .
+
+RUN mkdir -p /app/runtimes/linux-x64/native \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libleptonica.so /app/runtimes/linux-x64/native/libleptonica-1.82.0.so \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libtesseract.so.5 /app/runtimes/linux-x64/native/libtesseract.so
+
 ENTRYPOINT ["dotnet", "Catalog.Api.dll"]
