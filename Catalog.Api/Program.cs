@@ -43,17 +43,26 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // api documentation
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+// if (app.Environment.IsDevelopment())
+// {
+//     app.UseSwagger();
+//     app.UseSwaggerUI();
 
-    app.MapScalarApiReference(options =>
-    {
-        options.WithTitle("ECommerce.Api");
-        options.WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json");
-    });
-}
+//     app.MapScalarApiReference(options =>
+//     {
+//         options.WithTitle("ECommerce.Api");
+//         options.WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json");
+//     });
+// }
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.MapScalarApiReference(options =>
+{
+    options.WithTitle("ECommerce.Api");
+    options.WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json");
+});
 
 app.UseCors("AllowFrontend");
 
