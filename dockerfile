@@ -31,8 +31,9 @@ RUN apt-get update && apt-get install -y \
     libtesseract-dev \
     libleptonica-dev \
     libgssapi-krb5-2 \
-    && ln -s /usr/lib/x86_64-linux-gnu/libleptonica.so.5 /usr/lib/x86_64-linux-gnu/libleptonica-1.82.0.so \
     && rm -rf /var/lib/apt/lists/*
+
+ENV LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
