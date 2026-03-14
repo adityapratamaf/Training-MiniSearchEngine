@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy solution dan file project
-COPY ["MiniSearchEngine.sln", "./"]
+COPY ["MiniSearchEngine.slnx", "./"]
 COPY ["Catalog.Api/Catalog.Api.csproj", "Catalog.Api/"]
 COPY ["Catalog.Application/Catalog.Application.csproj", "Catalog.Application/"]
 COPY ["Catalog.Domain/Catalog.Domain.csproj", "Catalog.Domain/"]
