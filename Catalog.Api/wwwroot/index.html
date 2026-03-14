@@ -414,14 +414,32 @@
   </div>
 
   <script>
+
+    /* =========================================================
+    GLOBAL CONFIG
+    ========================================================= */
+
+    // Base URL otomatis mengikuti domain tempat frontend berjalan
     const API_BASE = window.location.origin;
+
+
+    /* =========================================================
+    APPLICATION STATE
+    ========================================================= */
 
     const state = {
     currentPage: 1,
     pageSize: 10,
     total: 0,
-    items: []
+    items: [],
+    lastRequestTimeMs: null,
+    suggestionTimer: null
     };
+
+
+    /* =========================================================
+    DOM ELEMENT REFERENCES
+    ========================================================= */
 
     const el = {
     queryParam: document.getElementById('queryParam'),
@@ -433,69 +451,144 @@
     pageSize: document.getElementById('pageSize'),
     searchBtn: document.getElementById('searchBtn'),
     results: document.getElementById('results'),
-    resultMeta: document.getElementById('resultMeta')
+    resultMeta: document.getElementById('resultMeta'),
+    requestTimeMeta: document.getElementById('requestTimeMeta'),
+    suggestionBox: document.getElementById('suggestionBox')
     };
 
-    function escapeHtml(v){
-    return String(v)
+
+    /* =========================================================
+    FORMAT REQUEST TIME
+    Menampilkan request time dalam ms atau s
+    ========================================================= */
+
+    function formatRequestTime(value){
+    if(value == null) return "-";
+
+    if(value < 1000)
+        return `${value.toFixed(0)} ms`;
+
+    return `${(value/1000).toFixed(2)} s`;
+    }
+
+
+    /* =========================================================
+    ESCAPE HTML
+    Menghindari XSS ketika menampilkan data
+    ========================================================= */
+
+    function escapeHtml(value){
+    return String(value)
     .replaceAll('&','&amp;')
     .replaceAll('<','&lt;')
     .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#39;");
     }
 
-    function currency(v){
-    return new Intl.NumberFormat('id-ID',{
-        style:'currency',
-        currency:'IDR',
+
+    /* =========================================================
+    FORMAT CURRENCY
+    Format harga menjadi rupiah
+    ========================================================= */
+
+    function formatCurrency(value){
+
+    if(value==null) return "-";
+
+    return new Intl.NumberFormat("id-ID",{
+        style:"currency",
+        currency:"IDR",
         maximumFractionDigits:0
-    }).format(v)
+    }).format(value)
+
     }
 
-    function buildQuery(pageOverride){
+
+    /* =========================================================
+    BUILD SEARCH QUERY
+    Membuat query string dari form input
+    ========================================================= */
+
+    function buildSearchQuery(pageOverride){
+
     const params = new URLSearchParams()
 
-    const q = el.queryParam.value.trim()
+    const query = el.queryParam.value.trim()
     const category = el.category.value
     const sort = el.sortPrice.value
+    const minPrice = el.minPrice.value
+    const maxPrice = el.maxPrice.value
 
-    if(q) params.append("queryParam",q)
+    if(query) params.append("queryParam",query)
     if(category) params.append("category",category)
     if(sort) params.append("sortPrice",sort)
+    if(minPrice) params.append("minPrice",minPrice)
+    if(maxPrice) params.append("maxPrice",maxPrice)
 
-    params.append("page",pageOverride ?? el.page.value)
-    params.append("pageSize",el.pageSize.value)
+    params.append("page", pageOverride ?? el.page.value)
+    params.append("pageSize", el.pageSize.value)
 
     return params
+
     }
 
-    function render(data){
 
-    state.total = data.total
-    state.currentPage = data.page
-    state.pageSize = data.pageSize
-    state.items = data.items
+    /* =========================================================
+    RENDER SEARCH RESULTS
+    Menampilkan list produk ke halaman
+    ========================================================= */
+
+    function renderResults(data){
+
+    state.total = data.total ?? 0
+    state.currentPage = data.page ?? 1
+    state.pageSize = data.pageSize ?? 10
+    state.items = data.items ?? []
 
     el.resultMeta.textContent =
-    `Page ${state.currentPage} • Total ${state.total}`
+        `Page ${state.currentPage} • Page Size ${state.pageSize} • Total ${state.total}`
+
+    el.requestTimeMeta.textContent =
+        `Request Time : ${formatRequestTime(state.lastRequestTimeMs)}`
+
 
     if(!state.items.length){
+
         el.results.innerHTML =
-        `<div class="empty">No Product</div>`
+        `<div class="empty">No Product Found</div>`
+
         return
     }
 
+
     el.results.innerHTML =
-    state.items.map(p => `
-    <div class="product">
-        <h3>${escapeHtml(p.name)}</h3>
+    state.items.map(item=>`
+
+        <div class="product">
+
+        <h3>${escapeHtml(item.name)}</h3>
+
         <div class="row">
-        <span class="badge">${p.category}</span>
-        <span class="badge">${currency(p.price)}</span>
+            <span class="badge">${escapeHtml(item.category)}</span>
+            <span class="badge">${formatCurrency(item.price)}</span>
         </div>
-        <div class="description">${escapeHtml(p.description)}</div>
-    </div>
-    `).join('')
+
+        <div class="description">
+            ${escapeHtml(item.description)}
+        </div>
+
+        </div>
+
+    `).join("")
+
     }
+
+
+    /* =========================================================
+    LOAD CATEGORIES
+    Mengambil list category dari API
+    ========================================================= */
 
     async function loadCategories(){
 
@@ -503,7 +596,8 @@
 
         const res = await fetch(`${API_BASE}/api/products/categories`)
 
-        if(!res.ok) throw new Error(res.status)
+        if(!res.ok)
+        throw new Error(res.status)
 
         const categories = await res.json()
 
@@ -511,13 +605,17 @@
         `<option value="">All Category</option>`
 
         categories.forEach(c=>{
-        const opt=document.createElement("option")
-        opt.value=c
-        opt.textContent=c
-        el.category.appendChild(opt)
+
+        const option = document.createElement("option")
+        option.value = c
+        option.textContent = c
+
+        el.category.appendChild(option)
+
         })
 
-    }catch(err){
+    }
+    catch(err){
 
         console.error("Load category error",err)
 
@@ -525,24 +623,37 @@
 
     }
 
-    async function search(pageOverride){
 
-    const query = buildQuery(pageOverride)
+    /* =========================================================
+    SEARCH PRODUCTS
+    Melakukan request pencarian produk
+    ========================================================= */
+
+    async function searchProducts(pageOverride){
+
+    const params = buildSearchQuery(pageOverride)
 
     const url =
-    `${API_BASE}/api/products/search-by-text?${query}`
+        `${API_BASE}/api/products/search-by-text?${params}`
 
     try{
 
+        const start = performance.now()
+
         const res = await fetch(url)
 
-        if(!res.ok) throw new Error(res.status)
+        if(!res.ok)
+        throw new Error(res.status)
 
         const data = await res.json()
 
-        render(data)
+        state.lastRequestTimeMs =
+        performance.now() - start
 
-    }catch(err){
+        renderResults(data)
+
+    }
+    catch(err){
 
         console.error("Search error",err)
 
@@ -550,12 +661,205 @@
 
     }
 
-    el.searchBtn.addEventListener("click",()=>{
-    search()
+
+    /* =========================================================
+    RENDER SUGGESTIONS
+    Menampilkan suggestion produk
+    ========================================================= */
+
+    function renderSuggestions(items){
+
+    if(!items || !items.length){
+
+        hideSuggestions()
+        return
+
+    }
+
+
+    el.suggestionBox.innerHTML =
+
+        items.map(item=>`
+
+        <div class="suggestion-item"
+            data-name="${escapeHtml(item.name)}">
+
+            <div class="suggestion-name">
+            ${escapeHtml(item.name)}
+            </div>
+
+            <div class="suggestion-meta">
+            ${escapeHtml(item.category)} •
+            ${formatCurrency(item.price)}
+            </div>
+
+        </div>
+
+        `).join("")
+
+        +
+
+        `<div style="padding:8px;font-size:12px;color:#aab4d6">
+        Request: ${formatRequestTime(state.lastRequestTimeMs)}
+        </div>`
+
+
+    el.suggestionBox.classList.remove("hidden")
+
+
+    el.suggestionBox
+        .querySelectorAll(".suggestion-item")
+        .forEach(item=>{
+
+        item.addEventListener("click",()=>{
+
+            el.queryParam.value =
+            item.dataset.name
+
+            hideSuggestions()
+
+            searchProducts()
+
+        })
+
+        })
+
+    }
+
+
+    /* =========================================================
+    FETCH SUGGESTIONS
+    Mengambil suggestion dari API ketika user mengetik
+    ========================================================= */
+
+    async function fetchSuggestions(){
+
+    const keyword =
+        el.queryParam.value.trim()
+
+    if(keyword.length < 2){
+
+        hideSuggestions()
+        return
+
+    }
+
+
+    const params = new URLSearchParams()
+
+    params.append("queryParam",keyword)
+    params.append("page","1")
+    params.append("pageSize","5")
+
+
+    try{
+
+        const start = performance.now()
+
+        const res = await fetch(
+        `${API_BASE}/api/products/search-by-text?${params}`
+        )
+
+        if(!res.ok)
+        return hideSuggestions()
+
+        const data = await res.json()
+
+        state.lastRequestTimeMs =
+        performance.now() - start
+
+        renderSuggestions(data.items)
+
+    }
+    catch{
+
+        hideSuggestions()
+
+    }
+
+    }
+
+
+    /* =========================================================
+    HIDE SUGGESTIONS
+    Menyembunyikan dropdown suggestion
+    ========================================================= */
+
+    function hideSuggestions(){
+
+    el.suggestionBox.classList.add("hidden")
+    el.suggestionBox.innerHTML=""
+
+    }
+
+
+    /* =========================================================
+    PAGINATION
+    Navigasi halaman search result
+    ========================================================= */
+
+    function handlePagination(direction){
+
+    const next =
+        Math.max(1,state.currentPage + direction)
+
+    el.page.value = next
+
+    searchProducts(next)
+
+    }
+
+
+    /* =========================================================
+    EVENT LISTENERS
+    ========================================================= */
+
+    el.searchBtn.addEventListener(
+    "click",
+    ()=>searchProducts()
+    )
+
+    document
+    .getElementById("prevBtn")
+    .addEventListener("click",()=>handlePagination(-1))
+
+    document
+    .getElementById("nextBtn")
+    .addEventListener("click",()=>handlePagination(1))
+
+
+    /* suggestion debounce */
+
+    el.queryParam.addEventListener("input",()=>{
+
+    clearTimeout(state.suggestionTimer)
+
+    state.suggestionTimer =
+        setTimeout(fetchSuggestions,300)
+
     })
 
+
+    /* hide suggestion when clicking outside */
+
+    document.addEventListener("click",e=>{
+
+    const wrapper =
+        document.querySelector(".suggestion-wrapper")
+
+    if(wrapper && !wrapper.contains(e.target))
+        hideSuggestions()
+
+    })
+
+
+    /* =========================================================
+    INITIAL LOAD
+    ========================================================= */
+
     loadCategories()
-    </script>
+
+</script>
 
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
