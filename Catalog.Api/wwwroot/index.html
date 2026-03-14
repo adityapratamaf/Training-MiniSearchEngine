@@ -414,6 +414,8 @@
   </div>
 
   <script>
+    const API_BASE = window.location.origin;
+
     const state = {
       lastMode: null,
       lastRequest: null,
@@ -528,7 +530,7 @@
 
     // FETCH CATEGORIES
     async function loadCategories() {
-      const apiBaseUrl = getApiBaseUrl();
+    //   const apiBaseUrl = getApiBaseUrl();
 
       try {
         const response = await fetch(`${apiBaseUrl}/api/products/categories`, {
@@ -563,7 +565,7 @@
     }
 
     async function handleSearch(pageOverride) {
-      const apiBaseUrl = getApiBaseUrl();
+    //   const apiBaseUrl = getApiBaseUrl();
       const params = buildSearchQuery(pageOverride);
       const url = `${apiBaseUrl}/api/products/search-by-text?${params.toString()}`;
 
@@ -607,7 +609,7 @@
         return;
       }
 
-      const apiBaseUrl = getApiBaseUrl();
+    //   const apiBaseUrl = getApiBaseUrl();
       const page = String(pageOverride ?? Number(el.imagePage.value || 1));
       const pageSize = String(Number(el.imagePageSize.value || 10));
       const url = `${apiBaseUrl}/api/products/search-by-image?page=${encodeURIComponent(page)}&pageSize=${encodeURIComponent(pageSize)}`;
@@ -699,7 +701,7 @@
 
     async function fetchSuggestions() {
       const keyword = el.queryParam.value.trim();
-      const apiBaseUrl = getApiBaseUrl();
+    //   const apiBaseUrl = getApiBaseUrl();
 
       console.log('keyword:', keyword);
 
