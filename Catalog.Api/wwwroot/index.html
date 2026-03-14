@@ -462,7 +462,7 @@
     }
 
     function getApiBaseUrl() {
-      return el.apiBaseUrl.value.trim().replace(/\/$/, '');
+      return window/location.origin;
     }
 
     function buildSearchQuery(pageOverride) {
